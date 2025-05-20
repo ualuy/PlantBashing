@@ -7,6 +7,7 @@ plleaves=0
 usrinput=false
 namecycle=0
 names=("Morpheus" "Analiea" "Izzy")
+growthrate=2
 
 
 # Start game
@@ -96,7 +97,7 @@ ask() {
     questions=("Wanna keep waiting for $names to grow?" "Do you want to wait for $names to grow?" "Keep waiting?")
     size=${#questions[@]}
     rand_index=$((RANDOM % size))
-    weather=("Rainy" "Sunny" "Cloudy" "Overcast" "Windstorm" "Foggy" "Thunderstorm")
+    weather=("rainy" "sunny" "cloudy" "overcast" "windstorm" "foggy" "rainy" "sunny" "cloudy" "overcast" "windstorm" "foggy" "thunderstorm")
     randompick=$((RANDOM % ${#weather[@]} ))
     echo "${questions[$rand_index]} (y/n)"
     startloop=true
@@ -108,19 +109,15 @@ ask() {
             echo "This is day $dayn."
             if [[ $dayn -lt 3 ]]; then
                 echo "Nothing has happened yet..."
-                weathera
                 ask
             elif [[ $dayn == 3 ]]; then
                 echo "$names germinated overnight! 🎉"
-                weathera
                 ask
             elif [[ $dayn -gt 3 && $dayn -lt 6 ]]; then
                 echo "Nothing has happened yet..."
-                weathera
                 ask
             elif [[ $dayn == 6 ]]; then
-                echo "$names has grown into a green little plant! 🎉"
-                weathera
+                echo "$names has sprouted and turned into a green little plant! 🎉"
                 ask
             elif [[ $dayn -gt 6 && $dayn -lt 21 ]]; then
                 echo "$names has grown 2 cm and sprouted two new leaves!"
@@ -159,6 +156,13 @@ ask() {
 
 weathera() {
         echo "Today's weather is ${weather[$randompick]}."
+        if [[ $randompick == "sunny" ]]; then
+
+}
+
+growth() {
+    plheight=$(bc <<< "$plheight + 1.5")
+    plleaves=$(bc <<< "$plleaves + 2 + (2.5 * growthrate)")
 }
 
 # Exit game
