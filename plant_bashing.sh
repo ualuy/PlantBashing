@@ -1,97 +1,136 @@
-#!bin/bash
+#!/bin/bash
 
 dayn=0
 msgwait="You waited for a whole day, but nothing happened."
 plheight=0
 plleaves=0
+usrinput=false
 
-wait() {
-	echo "Do you want to wait even more?(y/n)"
-	while true; do
-		read ans
-		if [[ $ans == "y" || $ans == "Y" ]]; then
-			((dayn++))
-			echo "This is day $dayn."
-			if [[ $dayn -lt 3 ]]; then
-				echo "Nothing has happened yet."
-				wait
-			elif [[ $dayn == 3 ]]; then
-				echo "Your seed germinated overnight!"
-				wait
-			elif [[ $dayn -gt 3 ]] && [[ $dayn -lt 6 ]]; then
-				echo "Nothing happened yet..."
-				wait
-			elif [[ $dayn == 6 ]]; then
-				echo "Your seed has grown into a green little plant!"
-				wait	
-			elif [[ $dayn -gt 6 ]] && [[ $dayn -lt 21 ]];then
-				echo "Your plant has grown 2 cm!"
-				sleep 1
-				echo "And has got two leaves!"
-				((plheight += 2))
-				((plleaves += 2))
-				sleep 1
-				echo "Day count: $dayn"
-				sleep 1
-				echo "Your plant's current height: $plheight"
-				sleep 1
-				echo "Your plant's current leave count: $plleaves"
-				wait
-			else 
-				echo "Your plant has reached the end of its lifespan."
-				sleep 1
-				echo "Day count: $dayn"
-				sleep 1
-				echo "Your plant's current height: $plheight"
-				sleep 1
-				echo "Your plant's current leave count: $plleaves"
-				sleep 1
-				echo "It has lived a happy life."
-				sleep 1
-				echo "Goodbye, $username!"
-				sleep 1
-				exit
-			fi
-		elif [[ $ans == "n" || $ans == "N" ]]; then
-			echo "Goodbye $username!"
-			sleep 0.5
-			echo "It's been a great time knowing you."
-			sleep 0.5
-			exit
-		else 
-			echo "Invalid response. Please reenter."
-		fi
-	done
+# Start game
+play() {
+    # Reset variables to start a new game
+    dayn=0
+    plheight=0
+    plleaves=0
+    if [[ $usrinput == false ]]; then
+        echo "Hello new user! What's your name?"
+        read username
+        echo "Welcome, $username!"
+        echo "You dug a hole and planted a small seed."
+        sleep 1
+        echo "Do you want to name your plant? (y/n)"
+        usrinput=true
+    else
+        echo "Welcome back, $username!"
+        echo "You dug a hole and planted a small seed."
+        sleep 1
+        echo "Do you want to rename your plant? (y/n)"
+    fi
+    gamecycle
 }
 
-echo "Hello new user! What's your name?"
-read username
-echo "Welcome, $username"
-sleep 1
-echo "Do you want to plant a new seed?(y/n)"
+# Starting the game cycle
+gamecycle() {
+    plant=true
+    while [ "$plant" == true ]; do
+        read ans
+        if [[ $ans == "y" || $ans == "Y" ]]; then
+            plant=false
+            echo "What should its name be?"
+            read plantname
+            echo "Your plant's name will be $plantname!"
+        elif [[ $ans == "n" || $ans == "N" ]]; then
+            plant=false
+            echo "Since you didn't name it, its name shall be Morpheus."
+        else
+            echo "Invalid response, please reenter."
+        fi
+    done
+    echo "If you ever want to exit, just hit the ; key."
+    sleep 0.5
+    echo "Do you want to wait for $plantname to grow? (y/n)"
+    playerans=true
+    while [ "$playerans" = true ]; do
+        read ans
+        if [[ $ans == "y" || $ans == "Y" ]]; then
+            playerans=false
+            echo "$plantname will take 3 days to germinate."
+            echo "You are waiting for the first day to pass..."
+            sleep 3
+            echo "The day has passed."
+            echo "Nothing has happened yet..."
+            ask
+        elif [[ $ans == "n" || $ans == "N" ]]; then
+            playerans=false
+            plexit
+        else
+            echo "Invalid response, please reenter."
+        fi
+    done
+}
 
-while true; do
-	read ans
-	if [[ $ans == "y" || $ans == "Y" ]]; then
-		echo "You dug a hole, and planted a small grain-sized seed."
-		sleep 1
-		echo "This tiny world you are spectating flies way faster"
-		echo "than your world does. Everything passes quicker in here."
-		sleep 1
-		echo "Do you want to sit by and wait for the seed to grow?(y/n)" 
-		while true; do
-			read ans
-			((dayn++))
-			if [[ $ans == "y" || $ans == "Y" ]]; then
-				echo "The seed will always take 3 days to grow. "
-				echo "$msgwait"
-				echo "This is day $dayn. "
-				wait
-			fi
-		done
-	elif [[ $ans == "n" || $ans == "N" ]]; then 
-		test
-	else
-		echo "Invalid answer. Please reenter."
-	fi
-done
+# Game logic
+ask() {
+    questions=("Wanna keep waiting for $plantname to grow?" 
+           "Do you want to wait for $plantname to grow?" 
+           "Keep waiting?")
+    size=${#questions[@]}
+    rand_index=$((RANDOM % size))
+    echo "${questions[$rand_index]} (y/n)"
+    startloop=true
+    while [ "$startloop" = true ]; do
+        read ans
+        if [[ $ans == "y" || $ans == "Y" ]]; then
+            ((dayn++))
+            sleep 2
+            echo "This is day $dayn."
+            if [[ $dayn -lt 3 ]]; then
+                echo "Nothing has happened yet..."
+                ask
+            elif [[ $dayn == 3 ]]; then
+                echo "$plantname germinated overnight! 🎉"
+                ask
+            elif [[ $dayn -gt 3 && $dayn -lt 6 ]]; then
+                echo "Nothing has happened yet..."
+                ask
+            elif [[ $dayn == 6 ]]; then
+                echo "$plantname has grown into a green little plant! 🎉"
+                ask
+            elif [[ $dayn -gt 6 && $dayn -lt 21 ]]; then
+                echo "$plantname has grown 2 cm and sprouted two new leaves!"
+                ((plheight += 2))
+                ((plleaves += 2))
+                echo "Height: $plheight cm, Leaves: $plleaves"
+                ask
+            else
+                echo "$plantname has reached the end of its lifespan."
+                echo "Final day count: $dayn"
+                echo "Height: $plheight cm, Leaves: $plleaves"
+                echo "$plantname lived a happy life."
+                echo "Do you want to play again? (y/n)"
+                startloop=false
+                read ans
+                if [[ $ans == "y" || $ans == "Y" ]]; then
+                    play
+                else
+                    plexit
+                fi
+            fi
+        elif [[ $ans == "n" || $ans == "N" ]]; then
+            plexit
+        else
+            echo "Invalid response. Please reenter."
+        fi
+    done
+}
+
+# Exit game
+plexit() {
+    echo "Goodbye $username!"
+    sleep 0.5
+    echo "It's been a great time knowing you."
+    sleep 0.5
+    exit
+}
+
+play
