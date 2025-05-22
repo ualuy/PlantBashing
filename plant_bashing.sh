@@ -14,6 +14,7 @@ growthmsgs=("$names has grown 1.5 cm, and $(bc <<< "2 + (2.5 * growthrate)") lea
             "$names seems very energetic today! Height +1.5, and leaves + $(bc <<< "2 + (2.5 * growthrate)").")
 
 diemsg() {
+    (($dayn-=6))
     echo "Final day count: $dayn"
     echo "Height: $plheight cm, Leaves: $plleaves"
     echo "Windstorms survived: $survivecounter."
@@ -23,7 +24,7 @@ diemsg() {
 
 growecho() {
     echo "${growthmsgs[$msgpick]}"
-    echo "Current height: $plheight, current leaf count: $plleaves"
+    echo "Current height: $plheight cm, current leaf count: $plleaves"
 }
 
 limit0() {
@@ -145,12 +146,12 @@ ask() {
                 ask
             elif [[ $dayn -gt 6 ]]; then
                 weathera
-                if [[ $plheight -gt 35 ]]; then
+                if (( $(bc <<< "$plheight > 35") )); then
                     echo "$names has exceeded the height of 35 cm, and is truly independent from you!"
                     echo "It will take care of itself now."
                     diemsg
                     startloop=false
-                    waitforans = true
+                    waitforans=true
                         while [ "$waitforans" = true ]; do 
                         read ans
                         if [[ $ans == "y" || $ans == "Y" ]]; then
@@ -162,8 +163,8 @@ ask() {
                         else
                             echo "Invalid response. Answer again, please."
                         fi
-                    done
-                    retun
+                        done
+                    return
                 fi
                 ask
             fi
@@ -191,7 +192,7 @@ weathera() {
         growecho
     elif [[ $weathertoday == "rainy" ]]; then
         ((growthrate += 2))
-        growecho
+        echo "No growth today, but $names seems to be healthy!"
     elif [[ $weathertoday == "cloudy" ]]; then
         echo "No growth today..."
     elif [[ $weathertoday == "foggy" ]]; then
