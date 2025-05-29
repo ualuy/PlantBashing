@@ -1,10 +1,12 @@
 #!/bin/bash
 
+survive=0
 survivecounter=0
+survivecounter2=0
 dayn=0
 msgwait="You waited for a whole day, but nothing happened."
 plheight=0
-plleaves=2
+plleaves=0
 usrinput=false
 namecycle=0
 names=("Morpheus" "Analiea" "Izzy")
@@ -14,7 +16,7 @@ leaves_added=0
 growthmsgs=(
   "%s has grown 1.5 cm, and %s leaves!"
   "%s grew 1.5 cm and sprouted %s more leaves!" 
-  "%s seems very energetic today! Height +1.5, and leaves + %0f."
+  "%s seems very energetic today! Height +1.5, and leaves + %.0f."
 )
 
 
@@ -29,10 +31,15 @@ weatherdeath() {
                 fi
 }
 
+msg() {
+    printf "Current height: $plheight cm, current leaf count: $plleaves "
+}
+
 diemsg() {
     echo "Final day count: $dayn"
     echo "Height: $plheight cm, Leaves: $plleaves"
     echo "Windstorms survived: $survivecounter."
+    echo "Thunderstorms survived: $survivecounter2"
     echo "${names[$namecycle]} lived a happy life."
     echo "Do you want to play again? (y/n)"
 }
@@ -42,7 +49,6 @@ growecho() {
     plheight=$(bc <<< "$plheight + 1.5")
     plleaves=$(bc <<< "$plleaves + 2 + (2.5 * $growthrate) ")
     printf "${growthmsgs[$msgpick]}\n" "${names[$namecycle]}" "$leaves_added"
-    printf "Current height: $plheight cm, current leaf count: $plleaves "
     leaves_added=0
 }
 
@@ -149,7 +155,7 @@ ask() {
     size=${#questions[@]}
     rand_index=$((RANDOM % size))
     #choosing random weathers
-    weather=("rainy" "sunny" "cloudy" "overcast" "windstorm" "foggy" "thunderstorm")
+    weather=("rainy" "sunny" "cloudy" "overcast" "windstorm" "foggy" "thunderstorm" "severe rain" "heat wave" )
     randompick=$((RANDOM % ${#weather[@]} ))
     echo "${questions[$rand_index]} (y/n)"
     startloop=true
@@ -194,6 +200,8 @@ ask() {
                         fi
                         done
                     return
+                else 
+                    printf "Current height: $plheight cm, current leaf count: $plleaves "
                 fi
                 ask
             fi
@@ -224,19 +232,32 @@ weathera() {
     elif [[ $weathertoday == "cloudy" ]]; then
         echo "No growth today..."
     elif [[ $weathertoday == "foggy" ]]; then
-        ((growthrate -= 1))
+        ((growthrate -= 2))
         limit0
         echo "${names[$namecycle]} seems to be a little down today..."
     elif [[ $weathertoday == "overcast" ]]; then
         growecho
     elif [[ $weathertoday == "windstorm" ]]; then
-        ((growthrate -= 2))
+        ((growthrate -= 3))
         ((survivecounter += 1))
         limit0
         echo "${names[$namecycle]} got severely hurt..."
         echo "${names[$namecycle]} lost 3 leaves!"
         plleaves=$(bc <<< "$plleaves - 3")
+    elif [[ $weathertoday == "severe rain" ]]; then
+        ((growthrate -= 3))
+        limit0
+        echo "${names[$namecycle]} was flooded over by the heavy rain, and seems to not like it at all."
+    elif [[ $weathertoday == "heat wave" ]]; then
+        echo "It's too hot for {names[$namecycle]} to take!"
+        echo "It got so hot it lost 3 cm and 2 leaves."
+        ((growthrate -= 3))
+        plheight=$(bc <<< "$plheight - 3")
+        plleaves=$(bc <<< "$plleaves - 2")
+        limit0
+        ((survive++))
     elif [[ $weathertoday == "thunderstorm" ]]; then
+        ((survivecounter2++))
         possible=("very far and short" "not very far" "very close")
         rand_index=$((RANDOM % 3))
         choose="${possible[$rand_index]}"
@@ -251,6 +272,8 @@ weathera() {
             echo "${names[$namecycle]} was hurt by the storm!"
             plheight=$(bc <<< "$plheight - 2")
             plleaves=$(bc <<< "$plleaves - 2")
+            ((growthrate -= 3))
+            limit0
             echo "It got shredded and lost 2 cm and 2 leaves."
             ((resistance++))
         elif [[ $choose == "not very far" && $resistance -eq 0 ]] && (( $(bc <<< "$plheight < 2") )); then
@@ -261,15 +284,19 @@ weathera() {
             weatherdeath
         elif [[ $choose == "very close" && $resistance -eq 2 ]]; then
             echo "${names[$namecycle]} was hurt by the storm!"
-            plheight=$(bc <<< "$plheight - 1")
-            plleaves=$(bc <<< "$plleaves - 1")
-            echo "It got shredded and lost 2 cm and 2 leaves."
+            ((growthrate -= 3))
+            plheight=$(bc <<< "$plheight - 4")
+            plleaves=$(bc <<< "$plleaves - 4")
+            limit0
+            echo "It got shredded and lost 4 cm and 4 leaves."
             ((resistance++))
         elif [[ $choose == "very close" && $resistance -gt 2 && $resistance -lt 4 ]]; then
             echo "${names[$namecycle]} was slightly hurt by the storm."
-            plheight=$(bc <<< "$plheight - 1")
-            plleaves=$(bc <<< "$plleaves - 1")
-            echo "It got shredded and lost 1 cm and 1 leaves."
+            plheight=$(bc <<< "$plheight - 2")
+            plleaves=$(bc <<< "$plleaves - 2")
+            ((growthrate -= 2))
+            limit0
+            echo "It got shredded and lost 2 cm and 2 leaves."
             ((resistance++))
         elif [[ $choose == "very close" && $resistance -ge 4 ]]; then
             echo "${names[$namecycle]} was unharmed from the resistance it built up!"
